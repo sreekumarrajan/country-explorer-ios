@@ -1,0 +1,10 @@
+# Xcode build output and user-specific state
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.DS_Store
+
+# NOTE: CountryExplorer.xcodeproj IS committed, so the repo can be opened
+# without installing XcodeGen. project.yml remains the source of truth — edit
+# that and run `xcodegen generate`.

@@ -1,0 +1,89 @@
+# =============================================================================
+#  XcodeGen project definition
+# =============================================================================
+#  WHY THIS FILE EXISTS
+#
+#  An .xcodeproj is a directory containing project.pbxproj — a huge, generated,
+#  merge-conflict-prone file that lists every source file and build setting.
+#  Two people adding a file on separate branches reliably produces a conflict
+#  that is miserable to resolve by hand.
+#
+#  So many teams describe the project in YAML and generate the .xcodeproj from
+#  it (XcodeGen or Tuist). The YAML is the source of truth, readable and
+#  diffable; the .xcodeproj becomes a build artifact.
+#
+#  Regenerate after adding files or changing settings:
+#
+#      xcodegen generate
+#
+#  WHAT THE XCODE WIZARD WOULD HAVE ASKED YOU
+#
+#  File → New → Project → iOS → App presents a form. Every field maps to
+#  something below, so you can see exactly what the GUI is writing for you:
+#
+#    Product Name .......... CountryExplorer      → `name` and target names
+#    Organization Identifier com.sreekumar        → `bundleIdPrefix`
+#    Bundle Identifier ..... com.sreekumar.CountryExplorer (derived from both)
+#                            This is your app's unique identity on the App
+#                            Store and on device — Android's `applicationId`.
+#    Interface ............. SwiftUI              → no storyboard files here
+#    Language .............. Swift
+#    Testing System ........ Swift Testing        → the `Testing` import in tests
+#    Storage ............... SwiftData            → ModelContainer in the App
+#    Include Tests ......... checked              → the CountryExplorerTests target
+#
+#  Nothing here is magic. The wizard just writes these same settings into a
+#  pbxproj you cannot read.
+# =============================================================================
+
+name: CountryExplorer
+
+options:
+  bundleIdPrefix: com.sreekumar
+  # The oldest iOS this app will install on. Android calls it minSdk.
+  # 18.0 is a deliberate floor: @Observable, SwiftData and
+  # ContentUnavailableView all require iOS 17+, and 18 is comfortably
+  # widespread. Lowering it would mean reintroducing ObservableObject.
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # Swift 6 language mode turns data-race safety into compile-time errors.
+    # This is why FavoritesStore is @MainActor and why the App's init needs
+    # MainActor.assumeIsolated — the compiler genuinely checks.
+    SWIFT_VERSION: "6.0"
+    # Generate Info.plist from build settings instead of keeping a separate
+    # XML file. Modern default; one less file to hand-edit.
+    GENERATE_INFOPLIST_FILE: YES
+
+targets:
+  # --- The app itself -------------------------------------------------------
+  CountryExplorer:
+    type: application
+    platform: iOS
+    sources:
+      - path: CountryExplorer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sreekumar.CountryExplorer
+        INFOPLIST_KEY_CFBundleDisplayName: Country Explorer
+        # Which orientations the app supports — declared, like Android's
+        # android:screenOrientation, but as a build setting.
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        # NOTE: there is no "internet permission" to declare. iOS allows
+        # outbound HTTPS by default (App Transport Security blocks only
+        # plain HTTP). On Android, omitting the INTERNET permission breaks
+        # every request — a real asymmetry between the platforms.
+
+  # --- Unit tests -----------------------------------------------------------
+  CountryExplorerTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: CountryExplorerTests
+    dependencies:
+      # The test target depends on the app target, which is what makes
+      # `@testable import CountryExplorer` work.
+      - target: CountryExplorer
